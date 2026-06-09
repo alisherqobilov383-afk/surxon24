@@ -8,12 +8,10 @@ if sys.platform != 'win32':
         import uvloop
         asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
     except ImportError:
-        # Agar uvloop bo'lmasa, standart loopni o'rnatamiz
         asyncio.set_event_loop(asyncio.new_event_loop())
 else:
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
-# Endi qolgan kutubxonalarni import qilamiz
 from flask import Flask
 from threading import Thread
 from pyrogram import Client, filters
@@ -28,27 +26,31 @@ def run_flask():
 
 Thread(target=run_flask, daemon=True).start()
 
-# --- SOZLAMALAR ---
+# --- SOZLAMALAR (Kanal ID raqamlari bilan) ---
+# Manbalar:
+# SurxondaryoRasmiy: -1001408261787
+# Termiz_yangiliklari: -1002123389775
+# Target: -1003951220619
+
 CONFIG = {
-    "@SurxondaryoRasmiy": {
-        "target": "@surxon_24_live",
+    -1001408261787: {
+        "target": -1003951220619,
         "replacements": {
             "Сурхондарёдаги тезкор янгиликлар каналига обуна бўлинг": "https://t.me/surxon_24_live",
             "MEqqwqwqwDIA": "https://t.me/eltua",
             "qwqwqwqw": "https://x.com/eltz"
         }
     },
-    "@Termiz_yangiliklari": {
-        "target": "@surxon_24_live",
+    -1002123389775: {
+        "target": -1003951220619,
         "replacements": {
             "Surxondaryoning eng aktiv kanali👇": "https://t.me/surxon_24_live",
-            "Facebook": "https://www.facebook.com/profile.php?id=61585wqqwd818251235"
+            "Facebook": "https://www.facebook.com/profile.php?id=61585818251235"
         }
     }
 }
 
 async def start_bot():
-    # Client ni yaratamiz
     app = Client(
         "render_userbot", 
         api_id=int(os.environ.get("API_ID")), 
@@ -56,10 +58,20 @@ async def start_bot():
         session_string=os.environ.get("SESSION_STRING")
     )
 
+    await app.start()
+    print("🚀 Bot muvaffaqiyatli ishga tushdi!")
+
+    # Kanallarni keshga olish (resolve)
+    for cid in CONFIG.keys():
+        try:
+            await app.get_chat(cid)
+        except Exception:
+            pass
+
     @app.on_message(filters.chat(list(CONFIG.keys())))
     async def handler(client, message):
-        chat_username = f"@{message.chat.username}"
-        conf = CONFIG.get(chat_username)
+        chat_id = message.chat.id
+        conf = CONFIG.get(chat_id)
         
         text = message.caption or message.text or ""
         
@@ -70,22 +82,18 @@ async def start_bot():
         try:
             await client.copy_message(
                 chat_id=conf["target"],
-                from_chat_id=message.chat.id,
+                from_chat_id=chat_id,
                 message_id=message.id,
                 caption=new_text
             )
-            print(f"✅ {chat_username} -> {conf['target']} muvaffaqiyatli!")
+            print(f"✅ Xabar ko'chirildi: {chat_id}")
         except Exception as e:
-            print(f"❌ Xatolik ({chat_username}): {e}")
+            print(f"❌ Xatolik ({chat_id}): {e}")
 
-    await app.start()
-    print("🚀 Bot ko'p kanalli rejimda ishga tushdi!")
-    # Event loopni to'xtatmasdan ushlab turamiz
     await asyncio.Event().wait()
 
 if __name__ == "__main__":
-    # Python 3.14 da eng barqaror ishlaydigan usul
     try:
         asyncio.run(start_bot())
-    except KeyboardInterrupt:
-        pass
+    except Exception as e:
+        print(f"Kritik xatolik: {e}")
