@@ -1,11 +1,24 @@
 import sys
 import os
 import asyncio
+
+# --- MUHIM: Python 3.14 va Render uchun loopni oldindan sozlash ---
+if sys.platform != 'win32':
+    try:
+        import uvloop
+        asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+    except ImportError:
+        # Agar uvloop bo'lmasa, standart loopni o'rnatamiz
+        asyncio.set_event_loop(asyncio.new_event_loop())
+else:
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+# Endi qolgan kutubxonalarni import qilamiz
 from flask import Flask
 from threading import Thread
 from pyrogram import Client, filters
 
-# --- SERVER ---
+# --- SERVER (24/7 ishlashi uchun) ---
 flask_app = Flask("")
 @flask_app.route("/")
 def home(): return "Bot 24/7 ishlamoqda!"
@@ -16,7 +29,6 @@ def run_flask():
 Thread(target=run_flask, daemon=True).start()
 
 # --- SOZLAMALAR ---
-# Har bir manba kanalini shu yerga qo'shing
 CONFIG = {
     "@SurxondaryoRasmiy": {
         "target": "@surxon_24_live",
@@ -36,6 +48,7 @@ CONFIG = {
 }
 
 async def start_bot():
+    # Client ni yaratamiz
     app = Client(
         "render_userbot", 
         api_id=int(os.environ.get("API_ID")), 
@@ -48,16 +61,13 @@ async def start_bot():
         chat_username = f"@{message.chat.username}"
         conf = CONFIG.get(chat_username)
         
-        # Matnni yoki captionni olish
         text = message.caption or message.text or ""
         
-        # Replacements (Almashtirish) jarayoni
         new_text = text
         for old_word, new_link in conf["replacements"].items():
             new_text = new_text.replace(old_word, new_link)
         
         try:
-            # Media yoki matnli xabarni ko'chirish
             await client.copy_message(
                 chat_id=conf["target"],
                 from_chat_id=message.chat.id,
@@ -70,9 +80,12 @@ async def start_bot():
 
     await app.start()
     print("🚀 Bot ko'p kanalli rejimda ishga tushdi!")
+    # Event loopni to'xtatmasdan ushlab turamiz
     await asyncio.Event().wait()
 
 if __name__ == "__main__":
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    loop.run_until_complete(start_bot())
+    # Python 3.14 da eng barqaror ishlaydigan usul
+    try:
+        asyncio.run(start_bot())
+    except KeyboardInterrupt:
+        pass
