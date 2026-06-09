@@ -28,7 +28,7 @@ Thread(target=run_flask, daemon=True).start()
 
 # --- SOZLAMALAR (Kanal ID raqamlari bilan) ---
 # Manbalar:
-# SurxondaryoRasmiy: -1001408261787
+# SurxondaryoRasmiy: -1003797840044
 # Termiz_yangiliklari: -1002123389775
 # Target: -1003951220619
 
