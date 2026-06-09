@@ -38,8 +38,8 @@ CONFIG = {
             "qwqwqwqw": "https://x.com/eltz"
         }
     },
-    "@Termiz_yangiliklari": {
-        "target": "@surxon_24_live",
+    "https://t.me/tuztuzttt": {
+        "target": "https://t.me/surxon_24_live",
         "replacements": {
             "Surxondaryoning eng aktiv kanali👇": "https://t.me/surxon_24_live",
             "Facebook": "https://www.facebook.com/profile.php?id=61585wqqwd818251235"
