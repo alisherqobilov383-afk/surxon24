@@ -1,11 +1,25 @@
 import sys
-import os
 import asyncio
+import os
+
+# --- 1. Loopni eng birinchi bo'lib sozlaymiz ---
+if sys.platform != 'win32':
+    try:
+        import uvloop
+        asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+    except ImportError:
+        pass
+
+# Loopni yaratib, joriy thread uchun o'rnatamiz
+loop = asyncio.new_event_loop()
+asyncio.set_event_loop(loop)
+
+# --- 2. Endi boshqa kutubxonalarni import qilamiz ---
 from flask import Flask
 from threading import Thread
 from pyrogram import Client, filters
 
-# --- SERVER (24/7 ishlashi uchun) ---
+# --- SERVER ---
 flask_app = Flask("")
 @flask_app.route("/")
 def home(): return "Bot 24/7 ishlamoqda!"
@@ -16,12 +30,11 @@ def run_flask():
 Thread(target=run_flask, daemon=True).start()
 
 # --- SOZLAMALAR ---
-# Kalitlar faqat username bo'lishi kerak (t.me/ dan keyingi qism)
 CONFIG = {
-    "tuztuzttt": {  # Misol uchun username
+    "surxondaryo_rasmiy": {
         "target": "surxon_24_live",
         "replacements": {
-            "Сурхондарёдаги тезкор янгиликлар каналига обуna бўлинг": "https://t.me/surxon_24_live"
+            "Сурхондарёдаги тезкор янгиликлар каналига обуна бўлинг": "https://t.me/surxon_24_live"
         }
     }
 }
@@ -38,34 +51,27 @@ async def start_bot():
     async def handler(client, message):
         chat_username = message.chat.username
         conf = CONFIG.get(chat_username)
-        
-        if not conf:
-            return
+        if not conf: return
 
-        # Matnni o'zgartirish
         text = message.caption or message.text or ""
         new_text = text
-        for old_word, new_link in conf["replacements"].items():
-            new_text = new_text.replace(old_word, new_link)
+        for old, new in conf["replacements"].items():
+            new_text = new_text.replace(old, new)
         
         try:
-            # Xabarni nusxalash
             await client.copy_message(
                 chat_id=conf["target"],
                 from_chat_id=message.chat.id,
                 message_id=message.id,
                 caption=new_text[:1024]
             )
-            print(f"✅ {chat_username} -> {conf['target']} muvaffaqiyatli!")
+            print(f"✅ {chat_username} ga yuborildi.")
         except Exception as e:
-            print(f"❌ Xatolik ({chat_username}): {e}")
+            print(f"❌ Xatolik: {e}")
 
     await app.start()
     print("🚀 Bot ishga tushdi!")
     await asyncio.Event().wait()
 
 if __name__ == "__main__":
-    try:
-        asyncio.run(start_bot())
-    except KeyboardInterrupt:
-        pass
+    loop.run_until_complete(start_bot())
