@@ -31,7 +31,7 @@ Thread(target=run_flask, daemon=True).start()
 
 # --- SOZLAMALAR ---
 CONFIG = {
-    "surxondaryo_rasmiy": {
+    "tuztuzttt": {
         "target": "surxon_24_live",
         "replacements": {
             "Сурхондарёдаги тезкор янгиликлар каналига обуна бўлинг": "https://t.me/surxon_24_live"
