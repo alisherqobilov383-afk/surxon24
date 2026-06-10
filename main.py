@@ -34,7 +34,7 @@ CONFIG = {
     "tuztuzttt": {
         "target": "surxon_24_live",
         "replacements": {
-            "Сурхондарёдаги тезкор янгиликлар каналига обуна бўлинг": "https://t.me/surxon_24_live"
+            "https://t.me/+QOwQnkWfh-04MDg6": "https://t.me/surxon_24_live"
         }
     }
 }
